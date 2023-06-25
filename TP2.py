@@ -1,6 +1,8 @@
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
+import copy
+from matplotlib import animation
 def get_available_actions(grid, state):
 
     actions = []
@@ -28,7 +30,7 @@ def get_available_actions(grid, state):
 
 
 def initialize_q_table(grid_len, num_actions):
-    print(grid_len,"------------")
+    
     grid = [[[0] * num_actions for _ in range(grid_len)]
             for _ in range(grid_len)]
     return grid
@@ -97,13 +99,13 @@ def q_learning(grid, num_episodes, learning_rate, discount_factor, exploration_r
     num_states = len(grid) 
     num_actions = 4  # up, down, left, right
     q_table = initialize_q_table(num_states, num_actions)
-    
+    all_states=[]
     for episode in range(num_episodes):
         state=start
         total_reward = 0
         
         while True:
-        
+            all_states.append(state)
             # Choose an action based on epsilon-greedy strategy
             if np.random.rand() < exploration_rate:
                 action = np.random.choice(get_available_actions(grid, state))
@@ -130,7 +132,7 @@ def q_learning(grid, num_episodes, learning_rate, discount_factor, exploration_r
         
         print(f"Episode {episode+1}: Total Reward = {total_reward}")
     
-    return q_table
+    return q_table,all_states
 
 def find_agent(matrix):
     for i, row in enumerate(matrix):
@@ -142,12 +144,12 @@ def find_agent(matrix):
     return None
 
 def get_max_elements(matrix,grid):
-    print(matrix)
+    # print(matrix)
     # max_elements = [[0]*len(matrix[0])]*len(matrix[0])
     # indexes =  [[0]*len(matrix[0])]*len(matrix[0])
     max_elements = [[-1 for _ in range(len(matrix[0]))] for _ in range(len(matrix[0]))]
     indexes =[["0" for _ in range(len(matrix[0]))] for _ in range(len(matrix[0]))]
-    print(len(matrix[0]))
+    # print(len(matrix[0]))
     for i,row in enumerate(matrix):
         for j,col in  enumerate(row):
            
@@ -158,7 +160,7 @@ def get_max_elements(matrix,grid):
             for k in actions:
                 to_be_max[k] =matrix[i][j][k] 
                         
-            print((i,j),actions)
+            # print((i,j),actions)
             max =np.argmax(to_be_max)
             if grid[i][j]==4 or grid[i][j]==7 or grid[i][j]==-1:
                 indexes[i][j]="n"
@@ -175,6 +177,25 @@ def get_max_elements(matrix,grid):
 
     return max_elements, indexes
 
+def init(N):
+    sns.heatmap(np.zeros((N,N)) ,square=True,cbar=False)
+
+def animate(i):
+    data=data_list[i]
+    sns.heatmap(data,square=True,cbar=False)
+
+def make_gif(all_agent_states,grid,original_start,std_value):
+    frames=[]
+    grid[original_start[0]][original_start[1]]=0
+    for i in all_agent_states:
+        temp=copy.deepcopy(grid)
+        temp[i[0]][i[1]]=10
+        frames.append(temp)
+
+    fig=plt.figure()
+    anim =animation.FuncAnimation(fig,animate,init_func=init(len(grid[0])),frames=len(frames))
+    pillow=animation.PillowWriter(fps=7)
+    anim.save("teste.gif",writer=pillow)
 file_path = 'grid.txt'
 
 num_episodes, learning_rate, discount_factor, default_reward, e_greedy, grid_len,grid= read_input_file(file_path)
@@ -184,11 +205,26 @@ sns.heatmap(grid,square=True,cbar=False)
 plt.savefig('grid.jpg')
 start= find_agent(grid)
 print(start)
-q_table = q_learning(grid, num_episodes, learning_rate, discount_factor, e_greedy ,default_reward,start)
+q_table,all_states = q_learning(grid, num_episodes, learning_rate, discount_factor, e_greedy ,default_reward,start)
 max,ind = get_max_elements(q_table,grid)
 print(max,ind)
 sns.heatmap(max,cbar=True,square=True,annot=ind,fmt='')
 plt.plot()
 plt.savefig("idk.jpg")
-# print(get_max_elements(q_table))
+# make_gif(all_states,grid,start,default_reward)
+data_list=[]
 
+grid[start[0]][start[1]]=0
+limit =0
+for i in all_states:
+        if limit ==200:
+            break
+        limit+=1
+        temp=copy.deepcopy(grid)
+        temp[i[0]][i[1]]=10
+        data_list.append(temp)
+
+fig=plt.figure()
+anim =animation.FuncAnimation(fig,animate,init_func=init(len(grid[0])),frames=len(data_list))
+pillow=animation.PillowWriter(fps=7)
+anim.save("teste.gif",writer=pillow)
