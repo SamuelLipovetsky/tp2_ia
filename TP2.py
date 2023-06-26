@@ -39,6 +39,16 @@ def choose_optimal_action(q_table, state, grid):
 
     available_actions = get_available_actions(grid, state)
     actions = [q_table[state[0]][state[1]][i] for i in available_actions ]
+    #slip chance
+    if np.random.rand() < 0.2:
+        p_actions=[]
+        if 1 in available_actions:
+            p_actions.append(1)
+        if 3 in available_actions:
+            p_actions.append(3)
+        if len(p_actions)>0:
+            return np.random.choice(p_actions)
+
     action_index = np.argmax(actions)
     return available_actions[action_index]  
 
@@ -127,7 +137,7 @@ def q_learning(grid, num_episodes, learning_rate, discount_factor, exploration_r
             
             state = next_state
        
-            if reward == 1 or  reward == -1:  # Reached the goal state
+            if reward == 1 :  # Reached the goal state
                 break
         
         print(f"Episode {episode+1}: Total Reward = {total_reward}")
@@ -144,26 +154,32 @@ def find_agent(matrix):
     return None
 
 def get_max_elements(matrix,grid):
-    # print(matrix)
-    # max_elements = [[0]*len(matrix[0])]*len(matrix[0])
-    # indexes =  [[0]*len(matrix[0])]*len(matrix[0])
+
     max_elements = [[-1 for _ in range(len(matrix[0]))] for _ in range(len(matrix[0]))]
     indexes =[["0" for _ in range(len(matrix[0]))] for _ in range(len(matrix[0]))]
-    # print(len(matrix[0]))
+   
     for i,row in enumerate(matrix):
         for j,col in  enumerate(row):
            
             actions = get_available_actions(grid,(i,j))
             
-            # temps =[matrix[i][j][k] for k in actions ]
-            to_be_max =[-10000,-10000,-10000,-1000 ]
+          
+            to_be_max =[-10000,-10000,-10000,-10000 ]
             for k in actions:
                 to_be_max[k] =matrix[i][j][k] 
-                        
-            # print((i,j),actions)
+          
             max =np.argmax(to_be_max)
-            if grid[i][j]==4 or grid[i][j]==7 or grid[i][j]==-1:
+            max_elements[i][j] = np.max(to_be_max)  
+
+            if grid[i][j]==4 :
                 indexes[i][j]="n"
+                max_elements[i][j]=+1
+            if grid[i][j]==7: 
+                indexes[i][j]="n"
+                max_elements[i][j]=1
+            if grid[i][j]==-1:
+                indexes[i][j]="n"
+                max_elements[i][j]=0
             elif max==0:
                 indexes[i][j]= "c"
             elif max==1:
@@ -173,7 +189,7 @@ def get_max_elements(matrix,grid):
             elif max==3:
                 indexes[i][j]= "e"
 
-            max_elements[i][j] = np.max(to_be_max)  
+            
 
     return max_elements, indexes
 
