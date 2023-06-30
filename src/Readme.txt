@@ -1,4 +1,4 @@
-Nesse diretório está os scripts feitos para a análise dos resultados.
+Nesse diretório estao os scripts feitos para a análise dos resultados.
 Simulate.py é responsável por simular os cenários com Q-tables prontos
 e Graph_plots.py printa os graficos.
 in1_t.txt é o grid utilizado para a analise

@@ -3,7 +3,8 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from matplotlib import animation
 import sys
-import random 
+import random
+
 
 def get_available_actions(grid, state):
 
@@ -91,7 +92,7 @@ def read_input_file(file_path):
         row = line.strip().split(' ')
         grid.append(row)
     grid = np.array(grid).astype(float)
-  
+
     return iterations, learning_rate, discount_factor, default_reward, e_greedy, grid_len, grid
 
 
@@ -108,7 +109,7 @@ def get_next_state(state, action):
         return (row, col - 1)
 
 
-def q_learning(grid, num_episodes, learning_rate, discount_factor, exploration_rate, default_reward, start,random_start=False):
+def q_learning(grid, num_episodes, learning_rate, discount_factor, exploration_rate, default_reward, start, random_start=False):
     num_states = len(grid)
     num_actions = 4  # up, down, left, right
     q_table = initialize_q_table(num_states, num_actions)
@@ -116,15 +117,15 @@ def q_learning(grid, num_episodes, learning_rate, discount_factor, exploration_r
     state = start
     total_reward = 0
     iterations = 0
-    rewards =[]
-    steps =[]
-    average_max_q=[]
-    step=0
-    #possible starts used only if random_start=True
+    rewards = []
+    steps = []
+    average_max_q = []
+    step = 0
+    # possible starts used only if random_start=True
     valid_indices = []
     for i in range(len(grid)):
         for j in range(len(grid)):
-            if grid[i][j] != -1 and grid[i][j]!=1 and grid[i][j]!=7 and grid[i][j]!=4 :
+            if grid[i][j] != -1 and grid[i][j] != 1 and grid[i][j] != 7 and grid[i][j] != 4:
                 valid_indices.append((i, j))
     while True:
         if iterations == num_episodes:
@@ -152,26 +153,26 @@ def q_learning(grid, num_episodes, learning_rate, discount_factor, exploration_r
 
         state = next_state
 
-        if reward == 1 :
+        if reward == 1:
             rewards.append(total_reward)
             steps.append(step)
             average_max_q.append(np.mean([np.max(i) for i in q_table]))
 
             state = start
             if random_start:
-                 state= random.choice(valid_indices)
+                state = random.choice(valid_indices)
             total_reward = 0
-            step=0
+            step = 0
         if reward == -1:
             state = start
             if random_start:
-                 state= random.choice(valid_indices)
+                state = random.choice(valid_indices)
             total_reward = 0
-            step=0
+            step = 0
         iterations += 1
-        step+=1
+        step += 1
 
-    return q_table, agent_states,rewards,steps,average_max_q
+    return q_table, agent_states, rewards, steps, average_max_q
 
 
 def find_agent(matrix):
@@ -182,16 +183,18 @@ def find_agent(matrix):
 
     return None
 
-#Gets the biggest element of the q table for every position at the grid
-#Returns the values of the biggest Q table element for every position
-#And the label that represents the best move at every position
-#Matrix-> Q table of shape [i,j,4]
-#Grid -> Grid that represents the possible states
-def get_max_elements(matrix, grid,better_labels=False):
+# Gets the biggest element of the q table for every position at the grid
+# Returns the values of the biggest Q table element for every position
+# And the label that represents the best move at every position
+# Matrix-> Q table of shape [i,j,4]
+# Grid -> Grid that represents the possible states
+
+
+def get_max_elements(matrix, grid, better_labels=False):
 
     max_elements = [[-1 for _ in range(len(matrix[0]))]
                     for _ in range(len(matrix[0]))]
-    
+
     indexes = [["0" for _ in range(len(matrix[0]))]
                for _ in range(len(matrix[0]))]
 
@@ -206,9 +209,9 @@ def get_max_elements(matrix, grid,better_labels=False):
 
             max = np.argmax(to_be_max)
             max_elements[i][j] = np.max(to_be_max)
-            labels=["c","d","b","e","n"]
-            if better_labels==True:
-                labels=["↑","→","↓","←","██"]
+            labels = ["c", "d", "b", "e", "n"]
+            if better_labels == True:
+                labels = ["↑", "→", "↓", "←", "██"]
             if max == 0:
                 indexes[i][j] = labels[0]
             elif max == 1:
@@ -218,23 +221,23 @@ def get_max_elements(matrix, grid,better_labels=False):
             elif max == 3:
                 indexes[i][j] = labels[3]
             if grid[i][j] == 4:
-                
+
                 indexes[i][j] = labels[4]
                 if better_labels:
-                    indexes[i][j] ="Lose" 
+                    indexes[i][j] = "Lose"
                 max_elements[i][j] = -1
 
             if grid[i][j] == 7:
-             
+
                 indexes[i][j] = labels[4]
                 if better_labels:
-                    indexes[i][j] ="Win" 
+                    indexes[i][j] = "Win"
                 max_elements[i][j] = 1
 
             if grid[i][j] == -1:
-               
+
                 indexes[i][j] = labels[4]
-            
+
                 max_elements[i][j] = 0
 
     return max_elements, indexes
@@ -243,30 +246,35 @@ def get_max_elements(matrix, grid,better_labels=False):
 def init(N):
     sns.heatmap(np.zeros((N, N)), square=True, cbar=False)
 
+
 def animate(i):
+    if i != 0 and i % 50 == 0:
+        print("processing frame "+str(i)+" / "+str(len(data_list)))
     data = data_list[i]
     sns.heatmap(data, square=True, cbar=False)
+
 
 if __name__ == "__main__":
 
     file_path = sys.argv[1]
     output_path = sys.argv[2]
-    
+
     num_episodes, learning_rate, discount_factor, default_reward, e_greedy, grid_len, grid = read_input_file(
         file_path)
 
     start = find_agent(grid)
- 
-    q_table, all_states,rewards,steps,average_max_q = q_learning(
+
+    q_table, all_states, rewards, steps, average_max_q = q_learning(
         grid, num_episodes, learning_rate, discount_factor, e_greedy, default_reward, start)
     max, ind = get_max_elements(q_table, grid)
 
     sns.heatmap(max, cbar=True, square=True, annot=ind, fmt='')
     plt.savefig("./saidas/"+output_path+".jpg")
+
     data_list = []
 
     grid[start[0]][start[1]] = 0
-   
+
     for i in all_states:
         temp = [row.copy() for row in grid]
         temp[i[0]][i[1]] = 10
@@ -275,7 +283,6 @@ if __name__ == "__main__":
     fig = plt.figure()
     anim = animation.FuncAnimation(
         fig, animate, init_func=init(len(grid[0])), frames=len(data_list))
+
     pillow = animation.PillowWriter(fps=7)
     anim.save("./saidas/"+output_path+".gif", writer=pillow)
-
-    
