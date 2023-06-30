@@ -1,10 +1,9 @@
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
-import copy
 from matplotlib import animation
 import sys
-
+import random 
 
 def get_available_actions(grid, state):
 
@@ -109,7 +108,7 @@ def get_next_state(state, action):
         return (row, col - 1)
 
 
-def q_learning(grid, num_episodes, learning_rate, discount_factor, exploration_rate, default_reward, start):
+def q_learning(grid, num_episodes, learning_rate, discount_factor, exploration_rate, default_reward, start,random_start=False):
     num_states = len(grid)
     num_actions = 4  # up, down, left, right
     q_table = initialize_q_table(num_states, num_actions)
@@ -121,6 +120,12 @@ def q_learning(grid, num_episodes, learning_rate, discount_factor, exploration_r
     steps =[]
     average_max_q=[]
     step=0
+    #possible starts used only if random_start=True
+    valid_indices = []
+    for i in range(len(grid)):
+        for j in range(len(grid)):
+            if grid[i][j] != -1 and grid[i][j]!=1 and grid[i][j]!=7 and grid[i][j]!=4 :
+                valid_indices.append((i, j))
     while True:
         if iterations == num_episodes:
             break
@@ -153,10 +158,14 @@ def q_learning(grid, num_episodes, learning_rate, discount_factor, exploration_r
             average_max_q.append(np.mean([np.max(i) for i in q_table]))
 
             state = start
+            if random_start:
+                 state= random.choice(valid_indices)
             total_reward = 0
             step=0
         if reward == -1:
             state = start
+            if random_start:
+                 state= random.choice(valid_indices)
             total_reward = 0
             step=0
         iterations += 1
@@ -234,11 +243,9 @@ def get_max_elements(matrix, grid,better_labels=False):
 def init(N):
     sns.heatmap(np.zeros((N, N)), square=True, cbar=False)
 
-
 def animate(i):
     data = data_list[i]
     sns.heatmap(data, square=True, cbar=False)
-
 
 if __name__ == "__main__":
 
@@ -248,7 +255,6 @@ if __name__ == "__main__":
     num_episodes, learning_rate, discount_factor, default_reward, e_greedy, grid_len, grid = read_input_file(
         file_path)
 
-    # sns.heatmap(grid, square=True, cbar=False)
     start = find_agent(grid)
  
     q_table, all_states,rewards,steps,average_max_q = q_learning(
@@ -256,12 +262,11 @@ if __name__ == "__main__":
     max, ind = get_max_elements(q_table, grid)
 
     sns.heatmap(max, cbar=True, square=True, annot=ind, fmt='')
-    # plt.plot()
-    plt.savefig(output_path+".jpg")
+    plt.savefig("./saidas/"+output_path+".jpg")
     data_list = []
 
     grid[start[0]][start[1]] = 0
-
+   
     for i in all_states:
         temp = [row.copy() for row in grid]
         temp[i[0]][i[1]] = 10
@@ -271,6 +276,6 @@ if __name__ == "__main__":
     anim = animation.FuncAnimation(
         fig, animate, init_func=init(len(grid[0])), frames=len(data_list))
     pillow = animation.PillowWriter(fps=7)
-    anim.save(output_path+".gif", writer=pillow)
+    anim.save("./saidas/"+output_path+".gif", writer=pillow)
 
     
